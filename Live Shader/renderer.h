@@ -317,10 +317,9 @@ public:
 #ifndef NDEBUG
 		shaderc_compile_options_set_generate_debug_info(options);
 #endif
-		ShaderToSpirV();
 
-		/*vertexChecker = std::thread(&Renderer::FileCheck, this, "../Shaders/VertexShader.hlsl", verShader);
-		pixelChecker = std::thread(&Renderer::FileCheck, this, "../Shaders/PixelShader.hlsl", pixShader);*/
+		vertexChecker = std::thread(&Renderer::FileCheck, this, "../Shaders/VertexShader.hlsl", verShader);
+		pixelChecker = std::thread(&Renderer::FileCheck, this, "../Shaders/PixelShader.hlsl", pixShader);
 
 		CreateGraphicsPipeline();
 
@@ -337,7 +336,6 @@ public:
 	{
 		if (hotload)
 		{
-			ShaderToSpirV();
 			CreateGraphicsPipeline();
 		}
 
@@ -364,16 +362,13 @@ public:
 		vkCmdDraw(commandBuffer, 6, 2, 0, 0);
 	}
 
-	~Renderer()
-	{
-
-	}
+	~Renderer() = default;
 
 private:
 
 	void CreateGraphicsPipeline()
 	{
-		//ShaderToSpirV();
+		ShaderToSpirV();
 
 		VkRenderPass renderPass;
 		vlk.GetRenderPass((void**)&renderPass);
@@ -470,7 +465,7 @@ private:
 		color_blend_create_info.blendConstants[1] = 0.0f;
 		color_blend_create_info.blendConstants[2] = 0.0f;
 		color_blend_create_info.blendConstants[3] = 0.0f;
-		// Dynamic State 
+		// Dynamic State
 		VkDynamicState dynamic_state[2] = {
 			// By setting these we do not need to re-create the pipeline on Resize
 			VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR
@@ -488,7 +483,7 @@ private:
 		pipeline_layout_create_info.pPushConstantRanges = nullptr;
 		vkCreatePipelineLayout(device, &pipeline_layout_create_info,
 			nullptr, &pipelineLayout);
-		// Pipeline State... (FINALLY) 
+		// Pipeline State... (FINALLY)
 		VkGraphicsPipelineCreateInfo pipeline_create_info = {};
 		pipeline_create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		pipeline_create_info.stageCount = 2;
