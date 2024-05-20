@@ -8,6 +8,12 @@
 class Renderer
 {
 
+	struct Vertex
+	{
+		GW::MATH2D::GVECTOR2F pos;
+		GW::MATH2D::GVECTOR2F uv;
+	};
+
 public:
 	Renderer(GW::SYSTEM::GWindow _win, GW::GRAPHICS::GVulkanSurface _vlk)
 	{
@@ -21,20 +27,26 @@ public:
 		vlk.GetDevice((void**)&device);
 		vlk.GetPhysicalDevice((void**)&physicalDevice);
 
-
-		float vertices[] = {
-			-1.f, 1.f, // Top-left
-			1.f, 1.f,
-			1.f, -1.f,
-			1.f, -1.f,
-			-1.f, -1.f,
-			-1.f, 1.f
+		std::vector<Vertex> vertices =
+		{
+			{{ -1.f, 1.f}, {0.f, 1.f}}, //Top Left
+			{{  1.f, 1.f}, {1.f, 1.f}}, //Top Right
+			{{ 1.f, -1.f}, {1.f, 0.f}}, //Bottom Right
+			{{ 1.f, -1.f}, {1.f, 0.f}}, //Bottom Right
+			{{-1.f, -1.f}, {0.f, 0.f}}, //Bottom left
+			{{ -1.f, 1.f}, {0.f, 1.f}} //Top Left
 		};
+		//float vertices[] = {
+		//	-1.f, 1.f, // Top-left
+		//	1.f, 1.f, // Top right
+		//	1.f, -1.f, //bottom right
+		//	1.f, -1.f, 
+		//	-1.f, -1.f, //bottom left
+		//	-1.f, 1.f //top left
+		//};
 
-		GvkHelper::create_buffer(physicalDevice, device, sizeof(vertices),
-			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-			VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &vertexBuffer, &vertexMemory);
-		GvkHelper::write_to_buffer(device, vertexMemory, vertices, sizeof(vertices));
+		GvkHelper::create_buffer(physicalDevice, device, sizeof(Vertex) * vertices.size(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &vertexBuffer, &vertexMemory);
+		GvkHelper::write_to_buffer(device, vertexMemory, vertices.data(), sizeof(Vertex) * vertices.size());
 
 		/***************** SHADER INTIALIZATION ******************/
 				// Intialize runtime shader compiler HLSL -> SPIRV
@@ -140,17 +152,27 @@ private:
 		// Vertex Input State
 		VkVertexInputBindingDescription vertex_binding_description = {};
 		vertex_binding_description.binding = 0;
-		vertex_binding_description.stride = sizeof(float) * 2;
+		vertex_binding_description.stride = sizeof(Vertex);
 		vertex_binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-		VkVertexInputAttributeDescription vertex_attribute_description[1] = {
-			{ 0, 0, VK_FORMAT_R32G32_SFLOAT, 0 } //uv, normal, etc....
-		};
+		VkVertexInputAttributeDescription vertex_attribute_descriptions[2] = {};
+		// Position attribute
+		vertex_attribute_descriptions[0].binding = 0;
+		vertex_attribute_descriptions[0].location = 0;
+		vertex_attribute_descriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+		vertex_attribute_descriptions[0].offset = offsetof(Vertex, pos);
+
+		// UV attribute
+		vertex_attribute_descriptions[1].binding = 0;
+		vertex_attribute_descriptions[1].location = 1;
+		vertex_attribute_descriptions[1].format = VK_FORMAT_R32G32_SFLOAT;
+		vertex_attribute_descriptions[1].offset = offsetof(Vertex, uv);
 		VkPipelineVertexInputStateCreateInfo input_vertex_info = {};
+
 		input_vertex_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 		input_vertex_info.vertexBindingDescriptionCount = 1;
 		input_vertex_info.pVertexBindingDescriptions = &vertex_binding_description;
-		input_vertex_info.vertexAttributeDescriptionCount = 1;
-		input_vertex_info.pVertexAttributeDescriptions = vertex_attribute_description;
+		input_vertex_info.vertexAttributeDescriptionCount = 2;
+		input_vertex_info.pVertexAttributeDescriptions = vertex_attribute_descriptions;
 		// Viewport State (we still need to set this up even though we will overwrite the values)
 		VkViewport viewport = {
 			0, 0, static_cast<float>(width), static_cast<float>(height), 0, 1
