@@ -36,14 +36,6 @@ public:
 			{{-1.f, -1.f}, {0.f, 0.f}}, //Bottom left
 			{{ -1.f, 1.f}, {0.f, 1.f}} //Top Left
 		};
-		//float vertices[] = {
-		//	-1.f, 1.f, // Top-left
-		//	1.f, 1.f, // Top right
-		//	1.f, -1.f, //bottom right
-		//	1.f, -1.f, 
-		//	-1.f, -1.f, //bottom left
-		//	-1.f, 1.f //top left
-		//};
 
 		GvkHelper::create_buffer(physicalDevice, device, sizeof(Vertex) * vertices.size(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &vertexBuffer, &vertexMemory);
 		GvkHelper::write_to_buffer(device, vertexMemory, vertices.data(), sizeof(Vertex) * vertices.size());
